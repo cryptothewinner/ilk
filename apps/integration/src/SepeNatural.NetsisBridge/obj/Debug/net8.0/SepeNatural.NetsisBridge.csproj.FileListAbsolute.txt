@@ -30,3 +30,5 @@ C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural
 C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural.NetsisBridge\obj\Debug\net8.0\SepeNatural.NetsisBridge.genruntimeconfig.cache
 C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural.NetsisBridge\obj\Debug\net8.0\ref\SepeNatural.NetsisBridge.dll
 C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural.NetsisBridge\bin\Debug\net8.0\appsettings.json
+C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural.NetsisBridge\bin\Debug\net8.0\package.json
+C:\Users\PC\.gemini\antigravity\scratch\sepe4.6\apps\integration\src\SepeNatural.NetsisBridge\obj\Debug\net8.0\SepeNatural.NetsisBridge.sourcelink.json
