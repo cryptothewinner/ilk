@@ -1,61 +1,86 @@
-import type { ApiResponse } from '@sepenatural/shared';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+interface RequestOptions extends Omit<RequestInit, 'body'> {
+    body?: unknown;
+}
 
-/**
- * Type-safe API client for the SepeNatural backend.
- * All methods return unwrapped data from the ApiResponse envelope.
- */
-class SepeApiClient {
+class ApiClient {
     private baseUrl: string;
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
     }
 
-    async request<T>(
-        method: string,
-        path: string,
-        body?: unknown,
-    ): Promise<T> {
-        const response = await fetch(`${this.baseUrl}${path}`, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
+    private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+        const { body, headers, ...rest } = options;
+
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers,
+            },
             body: body ? JSON.stringify(body) : undefined,
+            ...rest,
         });
 
-        const json = (await response.json()) as ApiResponse<T>;
-
-        if (!json.success) {
-            throw new ApiError(json.error!);
+        if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            throw new ApiError(
+                response.status,
+                errorBody.message || `HTTP ${response.status}`,
+                errorBody,
+            );
         }
 
-        return json.data as T;
+        return response.json();
     }
 
-    get<T>(path: string) {
-        return this.request<T>('GET', path);
+    isAuthenticated(): boolean {
+        if (typeof window === 'undefined') return false;
+        return !!localStorage.getItem('auth_token');
     }
 
-    post<T>(path: string, body: unknown) {
-        return this.request<T>('POST', path, body);
+    logout() {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+        }
     }
 
-    patch<T>(path: string, body: unknown) {
-        return this.request<T>('PATCH', path, body);
+    async login(email: string, password: string) {
+        const response = await this.post<any>('/api/auth/login', { email, password }); // Fixed to use /api prefix
+        if (response.success && response.data?.token) {
+            localStorage.setItem('auth_token', response.data.token);
+        }
+        return response.data;
+    }
+
+    get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+        return this.request<T>(endpoint, { ...options, method: 'GET' });
+    }
+
+    post<T>(endpoint: string, body: unknown, options?: RequestOptions): Promise<T> {
+        return this.request<T>(endpoint, { ...options, method: 'POST', body });
+    }
+
+    patch<T>(endpoint: string, body: unknown, options?: RequestOptions): Promise<T> {
+        return this.request<T>(endpoint, { ...options, method: 'PATCH', body });
+    }
+
+    delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+        return this.request<T>(endpoint, { ...options, method: 'DELETE' });
     }
 }
 
-class ApiError extends Error {
-    code: string;
-    details?: Record<string, unknown>;
-
-    constructor(error: NonNullable<ApiResponse<any>['error']>) {
-        super(error.message);
+export class ApiError extends Error {
+    constructor(
+        public status: number,
+        message: string,
+        public body?: unknown,
+    ) {
+        super(message);
         this.name = 'ApiError';
-        this.code = error.code;
-        this.details = error.details;
     }
 }
 
-export const api = new SepeApiClient(API_BASE);
+export const apiClient = new ApiClient(API_BASE_URL);

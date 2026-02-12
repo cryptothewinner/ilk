@@ -1,20 +1,23 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
-import { Public } from '../../auth/jwt-auth.guard';
 
-@Controller('metadata')
+@Controller('api/metadata')
 export class MetadataController {
-    constructor(private metadataService: MetadataService) { }
+    constructor(private readonly metadataService: MetadataService) { }
 
-    @Public()
     @Get('entities')
-    findAll() {
-        return this.metadataService.findAll();
+    async listEntities() {
+        const entities = await this.metadataService.listEntitySlugs();
+        return { success: true, data: entities };
     }
 
-    @Public()
-    @Get('entities/:slug')
-    findBySlug(@Param('slug') slug: string) {
-        return this.metadataService.findBySlug(slug);
+    @Get(':entitySlug')
+    async getEntitySchema(@Param('entitySlug') entitySlug: string) {
+        const schema = await this.metadataService.getEntitySchema(entitySlug);
+        return {
+            success: true,
+            data: schema,
+            generatedAt: new Date().toISOString(),
+        };
     }
 }

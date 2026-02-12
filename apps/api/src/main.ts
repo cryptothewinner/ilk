@@ -1,35 +1,31 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
-    const logger = new Logger('Bootstrap');
 
-    // Global prefix
-    app.setGlobalPrefix('api/v1');
-
-    // CORS
     app.enableCors({
-        origin: [
-            'http://localhost:3000', // Next.js
-        ],
+        origin: ['http://localhost:3000', 'http://localhost:3001'],
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         credentials: true,
     });
 
-    // Validation
     app.useGlobalPipes(
         new ValidationPipe({
-            whitelist: true,
             transform: true,
+            whitelist: true,
             forbidNonWhitelisted: false,
+            transformOptions: {
+                enableImplicitConversion: true,
+            },
         }),
     );
 
-    const port = process.env.PORT || 4000;
+    app.setGlobalPrefix('api/v1');
+
+    const port = process.env.API_PORT || 3001;
     await app.listen(port);
-    logger.log(`🚀 SepeNatural API running on http://localhost:${port}/api/v1`);
-    logger.log(`📊 Health check: http://localhost:${port}/api/v1/health`);
+    console.log(`🚀 API running on http://localhost:${port}`);
 }
 bootstrap();

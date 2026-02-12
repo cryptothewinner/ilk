@@ -40,7 +40,7 @@ export class EventBusService {
         // ── Step 1: Persist to outbox (for reliability) ──
         if (persist) {
             try {
-                await this.prisma.eventOutbox.create({
+                await (this.prisma as any).eventOutbox.create({
                     data: {
                         eventType,
                         aggregateType: eventType.split('.')[0] || 'unknown',

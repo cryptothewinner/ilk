@@ -75,8 +75,9 @@ export class InventoryService {
             const data = response.data;
 
             return {
-                rows: data.items,
+                rows: data.rows,
                 lastRow: data.totalCount,
+                totalCount: data.totalCount,
             };
         } catch (error: any) {
             this.logger.error(`Bridge call failed: ${error.message}`, error.stack);
