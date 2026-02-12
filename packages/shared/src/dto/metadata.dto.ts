@@ -51,3 +51,18 @@ export interface EntityDefinitionDto {
     createdAt: string;
     updatedAt: string;
 }
+export interface EntityPermissions {
+    canCreate: boolean;
+    canRead: boolean;
+    canUpdate: boolean;
+    canDelete: boolean;
+    canExport: boolean;
+}
+
+export interface EntitySchema {
+    entitySlug: string;
+    displayName: string;
+    fields: FieldDefinition[];
+    fieldGroups: FieldGroup[];
+    permissions: EntityPermissions;
+}

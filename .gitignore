@@ -34,3 +34,12 @@ Thumbs.db
 
 # Prisma
 /apps/api/prisma/migrations/
+
+# .NET
+bin/
+obj/
+appsettings.Development.json
+*.user
+*.userprefs
+*.sln.dotSettings.user
+*.suo

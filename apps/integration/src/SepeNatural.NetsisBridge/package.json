@@ -1,0 +1,10 @@
+{
+    "name": "@sepenatural/netsis-bridge",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "build": "dotnet build",
+        "dev": "dotnet watch run",
+        "start": "dotnet run"
+    }
+}

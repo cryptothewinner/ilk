@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import type { EntitySchema, FieldDefinition, FieldGroup, EntityPermissions } from '@sepe/shared';
+import type { EntitySchema, FieldDefinition, FieldGroup, EntityPermissions } from '@sepenatural/shared';
 
 interface FormSchemaResponse {
     entitySlug: string;

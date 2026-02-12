@@ -9,11 +9,15 @@
         "lint": "next lint"
     },
     "dependencies": {
-        "next": "^15.1.0",
-        "react": "^19.0.0",
         "@radix-ui/react-slot": "^1.1.2",
         "@sepenatural/shared": "workspace:*",
-        "ag-grid-community": "^33.1.1"
+        "@tanstack/react-query": "^5.90.21",
+        "ag-grid-community": "^33.1.1",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.563.0",
+        "next": "^15.1.0",
+        "react": "^19.0.0",
+        "tailwind-merge": "^3.4.0"
     },
     "devDependencies": {
         "@types/react": "^19.0.0",

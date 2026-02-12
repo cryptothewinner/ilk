@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@sepe/shared';
+import type { ApiResponse } from '@sepenatural/shared';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -50,7 +50,7 @@ class ApiError extends Error {
     code: string;
     details?: Record<string, unknown>;
 
-    constructor(error: NonNullable<ApiResponse['error']>) {
+    constructor(error: NonNullable<ApiResponse<any>['error']>) {
         super(error.message);
         this.name = 'ApiError';
         this.code = error.code;

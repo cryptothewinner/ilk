@@ -1,0 +1,21 @@
+node_modules
+.pnpm-store
+.next
+dist
+build
+.turbo
+
+# .NET
+bin
+obj
+appsettings.Development.json
+
+# Local env files
+.env
+.env.*.local
+
+# Git
+.git
+.gitignore
+README.md
+LICENSE
