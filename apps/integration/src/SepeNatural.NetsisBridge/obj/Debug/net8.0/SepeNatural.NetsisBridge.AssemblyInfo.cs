@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SepeNatural.NetsisBridge")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ffc28e628bdc561288b5d59429c7492b543b809f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ae0d54a1b278be6458b643ea1465d7ccb0cbf0f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SepeNatural.NetsisBridge")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SepeNatural.NetsisBridge")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,21 +1,25 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "module": "CommonJS",
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "target": "ES2022",
+        "module": "commonjs",
         "moduleResolution": "node",
+        "target": "ES2021",
+        "declaration": true,
+        "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "declaration": false,
-        "declarationMap": false
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "skipLibCheck": true,
+        "strictNullChecks": false,
+        "noImplicitAny": false,
+        "paths": {
+            "@sepenatural/shared": [
+                "../../packages/shared/src/index.ts"
+            ]
+        }
+    }
 }

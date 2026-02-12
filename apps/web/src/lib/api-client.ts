@@ -48,7 +48,7 @@ class ApiClient {
     }
 
     async login(email: string, password: string) {
-        const response = await this.post<any>('/api/auth/login', { email, password }); // Fixed to use /api prefix
+        const response = await this.post<any>('/api/v1/auth/login', { email, password });
         if (response.success && response.data?.token) {
             localStorage.setItem('auth_token', response.data.token);
         }

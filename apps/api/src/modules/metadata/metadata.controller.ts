@@ -1,7 +1,9 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
+import { Public } from '../../auth/jwt-auth.guard';
 
-@Controller('api/metadata')
+@Public()
+@Controller('metadata')
 export class MetadataController {
     constructor(private readonly metadataService: MetadataService) { }
 
