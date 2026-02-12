@@ -1,91 +1,44 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { EntityDefinitionDto, FieldDefinition, FieldGroup } from '@sepenatural/shared';
+import type { EntityDefinitionDto } from '@sepenatural/shared';
 
 @Injectable()
 export class MetadataService {
-    private readonly logger = new Logger(MetadataService.name);
+    constructor(private prisma: PrismaService) { }
 
-    constructor(private readonly prisma: PrismaService) { }
-
-    async getAllDefinitions(): Promise<EntityDefinitionDto[]> {
-        const definitions = await this.prisma.entityDefinition.findMany({
+    async findAll(): Promise<EntityDefinitionDto[]> {
+        const entities = await this.prisma.entityDefinition.findMany({
             where: { isActive: true },
             orderBy: { name: 'asc' },
         });
 
-        return definitions.map(d => ({
-            id: d.id,
-            slug: d.slug,
-            name: d.name,
-            displayName: d.name,
-            description: d.description ?? undefined,
-            icon: d.icon ?? undefined,
-            fields: d.fields as unknown as FieldDefinition[],
-            fieldGroups: d.fieldGroups as unknown as FieldGroup[],
-            createdAt: d.createdAt.toISOString(),
-            updatedAt: d.updatedAt.toISOString(),
-        }));
+        return entities.map(entity => this.mapToDto(entity));
     }
 
-    async getDefinitionBySlug(slug: string): Promise<EntityDefinitionDto> {
-        const d = await this.prisma.entityDefinition.findUnique({
+    async findBySlug(slug: string): Promise<EntityDefinitionDto> {
+        const entity = await this.prisma.entityDefinition.findUnique({
             where: { slug },
         });
 
-        if (!d || !d.isActive) {
-            throw new NotFoundException(`Entity definition with slug "${slug}" not found`);
+        if (!entity) {
+            throw new NotFoundException(`Entity definition '${slug}' not found`);
         }
 
-        return {
-            id: d.id,
-            slug: d.slug,
-            name: d.name,
-            displayName: d.name,
-            description: d.description ?? undefined,
-            icon: d.icon ?? undefined,
-            fields: d.fields as unknown as FieldDefinition[],
-            fieldGroups: d.fieldGroups as unknown as FieldGroup[],
-            createdAt: d.createdAt.toISOString(),
-            updatedAt: d.updatedAt.toISOString(),
-        };
+        return this.mapToDto(entity);
     }
 
-    async createDefinition(data: Partial<EntityDefinitionDto>): Promise<EntityDefinitionDto> {
-        if (!data.slug || !data.name) {
-            throw new ConflictException('Slug and Name are required');
-        }
-
-        const existing = await this.prisma.entityDefinition.findUnique({
-            where: { slug: data.slug },
-        });
-
-        if (existing) {
-            throw new ConflictException(`Entity definition with slug "${data.slug}" already exists`);
-        }
-
-        const d = await this.prisma.entityDefinition.create({
-            data: {
-                slug: data.slug,
-                name: data.name,
-                description: data.description,
-                icon: data.icon,
-                fields: (data.fields ?? []) as any,
-                fieldGroups: (data.fieldGroups ?? []) as any,
-            },
-        });
-
+    private mapToDto(entity: any): EntityDefinitionDto {
         return {
-            id: d.id,
-            slug: d.slug,
-            name: d.name,
-            displayName: d.name,
-            description: d.description ?? undefined,
-            icon: d.icon ?? undefined,
-            fields: d.fields as unknown as FieldDefinition[],
-            fieldGroups: d.fieldGroups as unknown as FieldGroup[],
-            createdAt: d.createdAt.toISOString(),
-            updatedAt: d.updatedAt.toISOString(),
+            id: entity.id,
+            slug: entity.slug,
+            name: entity.name,
+            displayName: entity.name,
+            description: entity.description,
+            icon: entity.icon,
+            fields: entity.fields as any[],
+            fieldGroups: (entity.fieldGroups as any[]) ?? [],
+            createdAt: entity.createdAt.toISOString(),
+            updatedAt: entity.updatedAt.toISOString(),
         };
     }
 }

@@ -1,23 +1,20 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { MetadataService } from './metadata.service';
-import type { EntityDefinitionDto } from '@sepenatural/shared';
+import { Public } from '../../auth/jwt-auth.guard';
 
 @Controller('metadata')
 export class MetadataController {
-    constructor(private readonly metadataService: MetadataService) { }
+    constructor(private metadataService: MetadataService) { }
 
+    @Public()
     @Get('entities')
-    async getAllDefinitions() {
-        return this.metadataService.getAllDefinitions();
+    findAll() {
+        return this.metadataService.findAll();
     }
 
+    @Public()
     @Get('entities/:slug')
-    async getDefinitionBySlug(@Param('slug') slug: string) {
-        return this.metadataService.getDefinitionBySlug(slug);
-    }
-
-    @Post('entities')
-    async createDefinition(@Body() data: Partial<EntityDefinitionDto>) {
-        return this.metadataService.createDefinition(data);
+    findBySlug(@Param('slug') slug: string) {
+        return this.metadataService.findBySlug(slug);
     }
 }
