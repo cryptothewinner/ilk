@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 
 interface FindAllParams {
     page: number;
@@ -20,7 +19,7 @@ export class StockService {
         const skip = (page - 1) * pageSize;
 
         // Build where clause
-        const where: Prisma.StockWhereInput = {};
+        const where: Record<string, any> = {};
 
         // Global search
         if (search) {
@@ -72,7 +71,7 @@ export class StockService {
         }
 
         // Build orderBy
-        const orderBy: Prisma.StockOrderByWithRelationInput = {};
+        const orderBy: Record<string, 'asc' | 'desc'> = {};
         if (sortField) {
             orderBy[sortField as any] = sortOrder || 'asc';
         } else {
@@ -130,7 +129,7 @@ export class StockService {
             })
         ]);
 
-        const totalValue = totalValueResults.reduce((acc, curr) => acc + (curr.currentStock * curr.salePrice), 0);
+        const totalValue = totalValueResults.reduce((acc: number, curr: { currentStock: any; salePrice: any }) => acc + (Number(curr.currentStock) * Number(curr.salePrice)), 0);
 
         return {
             totalProducts,
