@@ -2,7 +2,7 @@ import { Controller, Get, Patch, Param, Body, Query, ParseIntPipe, DefaultValueP
 import { StockService } from './stock.service';
 import { UpdateStockDto } from './dto/update-stock.dto';
 
-@Controller('api/stocks')
+@Controller('stocks')
 export class StockController {
     constructor(private readonly stockService: StockService) { }
 
