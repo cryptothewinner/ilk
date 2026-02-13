@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import { themeQuartz } from 'ag-grid-community';
 import type {
     ColDef,
     GridReadyEvent,
@@ -233,11 +234,11 @@ export function SmartDataGrid<T = any>({
 
     return (
         <div
-            className={`ag-theme-quartz ${className}`}
+            className={className}
             style={{ height, width: '100%' }}
         >
             <AgGridReact
-                theme="legacy"
+                theme={themeQuartz}
                 ref={gridRef}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}

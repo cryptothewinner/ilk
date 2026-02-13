@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import { themeQuartz } from 'ag-grid-community';
 import type {
     ColDef,
     GridReadyEvent,
@@ -493,9 +494,9 @@ export default function RawMaterialsPage() {
                     </div>
 
                     {/* AG Grid */}
-                    <div className="flex-1 overflow-hidden ag-theme-quartz" style={{ height: '500px', width: '100%', backgroundColor: '#f8fafc' }}>
+                    <div className="flex-1 overflow-hidden" style={{ height: '500px', width: '100%', backgroundColor: '#f8fafc' }}>
                         <AgGridReact
-                            theme="legacy"
+                            theme={themeQuartz}
                             ref={gridRef}
                             getRowId={getRowId}
                             columnDefs={columnDefs}

@@ -6,7 +6,7 @@
  */
 import { LicenseManager, ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
 
-// Register all enterprise modules
+// Register enterprise modules
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 const licenseKey = process.env.NEXT_PUBLIC_AG_GRID_LICENSE;
