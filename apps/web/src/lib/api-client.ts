@@ -1,3 +1,5 @@
+import { recordClientApiMetric } from './performance-metrics';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 if (!process.env.NEXT_PUBLIC_API_URL && typeof window !== 'undefined') {
@@ -19,6 +21,9 @@ class ApiClient {
         const { body, headers, ...rest } = options;
         const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
+        const startTime = performance.now();
+        const method = rest.method || 'GET';
+
         const response = await fetch(`${this.baseUrl}${endpoint}`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -27,6 +32,16 @@ class ApiClient {
             },
             body: body ? JSON.stringify(body) : undefined,
             ...rest,
+        });
+
+        const durationMs = performance.now() - startTime;
+        recordClientApiMetric({
+            endpoint,
+            method,
+            durationMs,
+            statusCode: response.status,
+            ok: response.ok,
+            timestamp: Date.now(),
         });
 
         if (!response.ok) {

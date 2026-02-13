@@ -202,6 +202,7 @@ model Material {
   supplier    Supplier?    @relation(fields: [supplierId], references: [id])
   recipeItems RecipeItem[]
 
+  @@index([isActive])
   @@map("materials")
 }
 
@@ -227,6 +228,7 @@ model Product {
   recipes          Recipe[]
   productionOrders ProductionOrder[]
 
+  @@index([isActive])
   @@map("products")
 }
 
@@ -324,5 +326,6 @@ model ProductionBatch {
 
   @@index([status])
   @@index([manufacturingDate])
+  @@index([createdAt])
   @@map("production_batches")
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
@@ -82,7 +82,17 @@ export default function Home() {
     const { data: activityData, isLoading: activityLoading, isError: activityError } = useRecentActivity();
 
     const kpis = kpiData?.data ?? kpiData ?? {};
-    const statuses: Record<string, number> = statusData?.data ?? statusData ?? {};
+    const statuses: Record<string, number> = useMemo(() => {
+        const rawData = statusData?.data ?? statusData;
+        if (!rawData) return {};
+        if (Array.isArray(rawData)) {
+            return rawData.reduce((acc: any, item: any) => {
+                acc[item.status] = item.count;
+                return acc;
+            }, {});
+        }
+        return rawData;
+    }, [statusData]);
     const activities: any[] = activityData?.data ?? activityData ?? [];
 
     const handleRefresh = () => {

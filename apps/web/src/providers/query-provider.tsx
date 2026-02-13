@@ -3,6 +3,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/query-client';
+import '@/lib/ag-grid-setup';
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
     return (

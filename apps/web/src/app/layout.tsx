@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
-import '@/lib/ag-grid-setup';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/providers/auth-provider';
 

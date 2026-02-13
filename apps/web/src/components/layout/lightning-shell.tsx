@@ -60,6 +60,11 @@ const navItems: NavItem[] = [
         ],
     },
     {
+        label: 'Performans',
+        href: '/performance',
+        icon: <BarChart3 className="w-4 h-4" />,
+    },
+    {
         label: 'Envanter',
         href: '/inventory',
         icon: <Package className="w-4 h-4" />,
@@ -175,20 +180,18 @@ export function LightningShell({ children }: { children: React.ReactNode }) {
                                 <div key={item.label} className="relative">
                                     <button
                                         onClick={() => handleTabClick(item)}
-                                        className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 cursor-pointer ${
-                                            isActive
+                                        className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 cursor-pointer ${isActive
                                                 ? 'text-lightning-blue border-lightning-blue bg-white shadow-[0_-2px_0_inset_#0176D3]'
                                                 : 'text-slate-600 border-transparent hover:bg-white/50'
-                                        }`}
+                                            }`}
                                     >
                                         <span className={isActive ? 'text-lightning-blue' : 'text-slate-400'}>
                                             {item.icon}
                                         </span>
                                         {item.label}
                                         <ChevronDown
-                                            className={`w-3.5 h-3.5 transition-transform ${
-                                                isOpen ? 'rotate-180' : ''
-                                            } ${isActive ? 'text-lightning-blue' : 'text-slate-400'}`}
+                                            className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''
+                                                } ${isActive ? 'text-lightning-blue' : 'text-slate-400'}`}
                                         />
                                     </button>
                                 </div>
@@ -199,11 +202,10 @@ export function LightningShell({ children }: { children: React.ReactNode }) {
                             <Link
                                 key={item.href}
                                 href={item.href!}
-                                className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 ${
-                                    isActive
+                                className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 ${isActive
                                         ? 'text-lightning-blue border-lightning-blue bg-white shadow-[0_-2px_0_inset_#0176D3]'
                                         : 'text-slate-600 border-transparent hover:bg-white/50'
-                                }`}
+                                    }`}
                             >
                                 <span className={isActive ? 'text-lightning-blue' : 'text-slate-400'}>
                                     {item.icon}
@@ -229,11 +231,10 @@ export function LightningShell({ children }: { children: React.ReactNode }) {
                                         <Link
                                             key={child.href}
                                             href={child.href}
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-md transition-all ${
-                                                isChildActive
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-md transition-all ${isChildActive
                                                     ? 'text-lightning-blue bg-blue-50'
                                                     : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                            }`}
+                                                }`}
                                         >
                                             <span className={isChildActive ? 'text-lightning-blue' : 'text-slate-400'}>
                                                 {child.icon}

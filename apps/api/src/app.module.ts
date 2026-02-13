@@ -16,6 +16,9 @@ import { HealthController } from './health.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
+import { PerformanceController } from './modules/performance/performance.controller';
+import { PerformanceMetricsService } from './modules/performance/performance-metrics.service';
+
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -35,8 +38,9 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
         ProductionBatchModule,
         DashboardModule,
     ],
-    controllers: [HealthController],
+    controllers: [HealthController, PerformanceController],
     providers: [
+        PerformanceMetricsService,
         {
             provide: APP_GUARD,
             useClass: JwtAuthGuard,

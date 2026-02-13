@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 export default function LoginPage() {
     const router = useRouter();
     const { login } = useAuth();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('admin@sepenatural.com');
+    const [password, setPassword] = useState('Password123!');
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
                         type="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
-                        placeholder="ornek@firma.com"
+                        placeholder="admin@sepenatural.com"
                         required
                     />
                 </div>

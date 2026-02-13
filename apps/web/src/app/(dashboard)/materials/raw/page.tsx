@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type {
     ColDef,
@@ -8,6 +8,7 @@ import type {
     IServerSideDatasource,
     IServerSideGetRowsParams,
     GridApi,
+    GetRowIdParams,
 } from 'ag-grid-enterprise';
 import { ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
 import { apiClient } from '@/lib/api-client';
@@ -97,6 +98,11 @@ export default function RawMaterialsPage() {
 
     /* ---------- edit sheet state ---------- */
     const [selectedId, setSelectedId] = useState<string | null>(null);
+
+    const getRowId = useCallback(
+        (params: GetRowIdParams<MaterialRow>) => params.data.id,
+        [],
+    );
     const [sheetOpen, setSheetOpen] = useState(false);
 
     const {
@@ -108,10 +114,18 @@ export default function RawMaterialsPage() {
     const detail = unwrapMaterialDetail(detailResponse);
 
     /* ---------- helpers ---------- */
-    const rawMaterialCount =
-        summary?.byType?.RAW_MATERIAL ?? summary?.byType?.raw_material ?? 0;
-    const packagingCount =
-        summary?.byType?.PACKAGING ?? summary?.byType?.packaging ?? 0;
+    const byTypeMap = useMemo(() => {
+        const map: Record<string, number> = {};
+        if (summary?.byType && Array.isArray(summary.byType)) {
+            summary.byType.forEach((item: any) => {
+                map[item.type] = item.count;
+            });
+        }
+        return map;
+    }, [summary]);
+
+    const rawMaterialCount = byTypeMap['RAW_MATERIAL'] ?? byTypeMap['raw_material'] ?? 0;
+    const packagingCount = byTypeMap['PACKAGING'] ?? byTypeMap['packaging'] ?? 0;
 
     /* ---------- columns ---------- */
     const columnDefs = useMemo<ColDef<MaterialRow>[]>(
@@ -256,6 +270,7 @@ export default function RawMaterialsPage() {
     const createDatasource = useCallback((): IServerSideDatasource => {
         return {
             getRows: async (params: IServerSideGetRowsParams) => {
+                console.log('MaterialsGrid: getRows called', params.request);
                 try {
                     const { startRow, sortModel, filterModel } = params.request;
                     const page = Math.floor((startRow || 0) / 50) + 1;
@@ -272,9 +287,12 @@ export default function RawMaterialsPage() {
                         sp.set('filters', JSON.stringify(filterModel));
                     }
 
+                    console.log('MaterialsGrid: fetching from', `/materials?${sp.toString()}`);
                     const response = await apiClient.get<any>(
                         `/materials?${sp.toString()}`,
                     );
+
+                    console.log('MaterialsGrid: data received', response.data?.length, 'rows');
 
                     params.success({
                         rowData: response.data,
@@ -290,6 +308,7 @@ export default function RawMaterialsPage() {
 
     const onGridReady = useCallback(
         (event: GridReadyEvent) => {
+            console.log('MaterialsGrid: onGridReady called');
             setGridApi(event.api);
             event.api.setGridOption(
                 'serverSideDatasource',
@@ -300,7 +319,7 @@ export default function RawMaterialsPage() {
     );
 
     /* refresh datasource when search changes */
-    useMemo(() => {
+    useEffect(() => {
         if (gridApi) {
             gridApi.setGridOption(
                 'serverSideDatasource',
@@ -474,9 +493,11 @@ export default function RawMaterialsPage() {
                     </div>
 
                     {/* AG Grid */}
-                    <div className="flex-1 overflow-hidden ag-theme-quartz">
+                    <div className="flex-1 overflow-hidden ag-theme-quartz" style={{ height: '500px', width: '100%', backgroundColor: '#f8fafc' }}>
                         <AgGridReact
+                            theme="legacy"
                             ref={gridRef}
+                            getRowId={getRowId}
                             columnDefs={columnDefs}
                             defaultColDef={{
                                 sortable: true,
@@ -517,7 +538,7 @@ export default function RawMaterialsPage() {
                                         {isLoadingDetail
                                             ? 'Yükleniyor...'
                                             : detail?.code ||
-                                              'Hammadde Düzenle'}
+                                            'Hammadde Düzenle'}
                                     </SheetTitle>
                                     {detail && (
                                         <Badge

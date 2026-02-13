@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Factory,
     Database,
@@ -23,6 +23,7 @@ import type {
     IServerSideDatasource,
     IServerSideGetRowsParams,
     GridApi,
+    GetRowIdParams,
 } from 'ag-grid-enterprise';
 import { ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
 
@@ -53,6 +54,9 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 };
 
 export default function ProductionPlanningPage() {
+    const gridRef = useRef<AgGridReact>(null);
+    const getRowId = useCallback((params: GetRowIdParams<any>) => params.data.id, []);
+
     const { data: summaryResult, refetch, isFetching } = useQuery({
         queryKey: ['production-orders-summary'],
         queryFn: () => apiClient.get<any>('/production-orders/summary'),
@@ -61,7 +65,6 @@ export default function ProductionPlanningPage() {
     const summary = summaryResult?.data;
     const byStatus = summary?.byStatus ?? {};
 
-    const gridRef = useRef<AgGridReact>(null);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -159,6 +162,7 @@ export default function ProductionPlanningPage() {
     const createDatasource = useCallback((): IServerSideDatasource => {
         return {
             getRows: async (params: IServerSideGetRowsParams) => {
+                console.log('ProductionPlanning: getRows called', params.request);
                 try {
                     const { startRow, endRow, sortModel, filterModel } = params.request;
                     const page = Math.floor((startRow ?? 0) / 50) + 1;
@@ -176,16 +180,19 @@ export default function ProductionPlanningPage() {
                         searchParams.set('filters', JSON.stringify(filterModel));
                     }
 
+                    console.log('ProductionPlanning: fetching from', `/production-orders?${searchParams.toString()}`);
                     const response = await apiClient.get<any>(
                         `/production-orders?${searchParams.toString()}`,
                     );
+
+                    console.log('ProductionPlanning: data received', response.data?.length, 'rows');
 
                     params.success({
                         rowData: response.data?.rows ?? response.data ?? [],
                         rowCount: response.data?.lastRow ?? response.meta?.total ?? -1,
                     });
                 } catch (error) {
-                    console.error('ProductionOrders grid error:', error);
+                    console.error('ProductionPlanning grid error:', error);
                     params.fail();
                 }
             },
@@ -194,13 +201,14 @@ export default function ProductionPlanningPage() {
 
     const onGridReady = useCallback(
         (event: GridReadyEvent) => {
+            console.log('ProductionPlanning: onGridReady called');
             setGridApi(event.api);
             event.api.setGridOption('serverSideDatasource', createDatasource());
         },
         [createDatasource],
     );
 
-    useMemo(() => {
+    useEffect(() => {
         if (gridApi) {
             gridApi.setGridOption('serverSideDatasource', createDatasource());
         }
@@ -345,9 +353,11 @@ export default function ProductionPlanningPage() {
                     </div>
 
                     {/* Grid */}
-                    <div className="flex-1 overflow-hidden ag-theme-quartz">
+                    <div className="flex-1 overflow-hidden ag-theme-quartz" style={{ height: '500px', width: '100%' }}>
                         <AgGridReact
+                            theme="legacy"
                             ref={gridRef}
+                            getRowId={getRowId}
                             columnDefs={columnDefs}
                             defaultColDef={{
                                 sortable: true,

@@ -237,6 +237,7 @@ export function SmartDataGrid<T = any>({
             style={{ height, width: '100%' }}
         >
             <AgGridReact
+                theme="legacy"
                 ref={gridRef}
                 columnDefs={columnDefs}
                 defaultColDef={defaultColDef}

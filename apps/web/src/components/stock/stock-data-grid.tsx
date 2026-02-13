@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import type {
     ColDef,
@@ -9,6 +9,7 @@ import type {
     IServerSideGetRowsParams,
     RowClickedEvent,
     GridApi,
+    GetRowIdParams,
 } from 'ag-grid-enterprise';
 import { ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
 import { apiClient } from '@/lib/api-client';
@@ -36,6 +37,7 @@ interface StockRow {
 
 export function StockDataGrid() {
     const gridRef = useRef<AgGridReact>(null);
+    const getRowId = useCallback((params: GetRowIdParams<StockRow>) => params.data.id, []);
     const [gridApi, setGridApi] = useState<GridApi | null>(null);
     const [selectedStockId, setSelectedStockId] = useState<string | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -112,6 +114,7 @@ export function StockDataGrid() {
         return {
             getRows: async (params: IServerSideGetRowsParams) => {
                 try {
+                    console.log('StockDataGrid: getRows called', params.request);
                     const { startRow, endRow, sortModel, filterModel } = params.request;
 
                     const response = await apiClient.post<any>('/inventory/grid', {
@@ -121,6 +124,8 @@ export function StockDataGrid() {
                         filterModel: filterModel as any,
                         searchText: searchTerm
                     });
+
+                    console.log('StockDataGrid: data received', response.data?.rows?.length, 'rows');
 
                     params.success({
                         rowData: response.data?.rows ?? [],
@@ -135,6 +140,7 @@ export function StockDataGrid() {
     }, [searchTerm]);
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
+        console.log('StockDataGrid: onGridReady called');
         setGridApi(params.api);
         params.api.setGridOption('serverSideDatasource', createDatasource());
     }, [createDatasource]);
@@ -144,7 +150,7 @@ export function StockDataGrid() {
         setSearchTerm(e.target.value);
     };
 
-    useMemo(() => {
+    useEffect(() => {
         if (gridApi) {
             gridApi.setGridOption('serverSideDatasource', createDatasource());
         }
@@ -184,8 +190,11 @@ export function StockDataGrid() {
             </div>
 
             {/* Grid Container */}
-            <div className="flex-1 overflow-hidden ag-theme-quartz">
+            <div className="flex-1 overflow-hidden ag-theme-quartz" style={{ height: '500px', width: '100%' }}>
                 <AgGridReact
+                    theme="legacy"
+                    ref={gridRef}
+                    getRowId={getRowId}
                     columnDefs={columnDefs}
                     defaultColDef={{
                         sortable: true,

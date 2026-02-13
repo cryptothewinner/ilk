@@ -6,21 +6,18 @@ import { Public } from '../../auth/jwt-auth.guard';
 export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) { }
 
-    @Public()
     @Get('kpis')
     async getKpis() {
-        return this.dashboardService.getKpis();
+        return { data: await this.dashboardService.getKpis() };
     }
 
-    @Public()
     @Get('production-status')
     async getProductionStatus() {
-        return this.dashboardService.getProductionStatus();
+        return { data: await this.dashboardService.getProductionStatus() };
     }
 
-    @Public()
     @Get('recent-activity')
     async getRecentActivity() {
-        return this.dashboardService.getRecentActivity();
+        return { data: await this.dashboardService.getRecentActivity() };
     }
 }
