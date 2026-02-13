@@ -181,8 +181,8 @@ export default function ProductionPlanningPage() {
                     );
 
                     params.success({
-                        rowData: response.data ?? response.rows ?? [],
-                        rowCount: response.meta?.total ?? response.lastRow ?? -1,
+                        rowData: response.data?.rows ?? response.data ?? [],
+                        rowCount: response.data?.lastRow ?? response.meta?.total ?? -1,
                     });
                 } catch (error) {
                     console.error('ProductionOrders grid error:', error);
