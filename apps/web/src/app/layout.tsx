@@ -7,6 +7,8 @@ import '@/lib/ag-grid-setup';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/providers/auth-provider';
 
+import { LightningShell } from '@/components/layout/lightning-shell';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -24,7 +26,9 @@ export default function RootLayout({
             <body className={inter.className}>
                 <QueryProvider>
                     <AuthProvider>
-                        {children}
+                        <LightningShell>
+                            {children}
+                        </LightningShell>
                     </AuthProvider>
                 </QueryProvider>
             </body>

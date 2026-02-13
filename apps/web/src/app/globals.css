@@ -3,11 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  --background: #F3F3F3;
+  --foreground: #080707;
+  --primary: #0176D3;
+  --border: #DDDBDA;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-color: var(--background);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Glassmorphism & Lightning Panels */
+.lightning-card {
+  @apply bg-white border border-lightning-border shadow-lightning-card rounded-lg;
+}
+
+.lightning-header {
+  @apply bg-[#f3f3f3] border-b border-lightning-border;
+}
+
+.lightning-nav-tab {
+  @apply px-4 py-3 text-sm font-semibold text-slate-600 border-b-2 border-transparent transition-all hover:text-lightning-blue hover:bg-white;
+}
+
+.lightning-nav-tab-active {
+  @apply text-lightning-blue border-lightning-blue bg-white;
 }

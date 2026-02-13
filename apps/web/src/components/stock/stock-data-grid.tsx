@@ -46,30 +46,33 @@ export function StockDataGrid() {
         () => [
             {
                 field: 'stockCode',
-                headerName: 'Stok Kodu',
-                width: 140,
+                headerName: 'STOK KODU',
+                width: 160,
                 filter: 'agTextColumnFilter',
                 pinned: 'left',
-                cellClass: 'font-mono font-bold text-primary',
+                cellClass: 'font-semibold text-lightning-blue border-r border-lightning-border',
+                headerClass: 'text-[11px] font-bold text-slate-500 uppercase tracking-wider',
             },
             {
                 field: 'stockName',
-                headerName: 'Stok Adı',
-                minWidth: 250,
+                headerName: 'STOK ADI',
+                minWidth: 300,
                 flex: 1,
                 filter: 'agTextColumnFilter',
-                cellClass: 'font-medium text-slate-700',
+                cellClass: 'text-slate-700 font-medium',
+                headerClass: 'text-[11px] font-bold text-slate-500 uppercase tracking-wider',
             },
             {
                 field: 'currentStock',
-                headerName: 'Mevcut Stok',
-                width: 130,
+                headerName: 'STOK MİKTARI',
+                width: 150,
                 filter: 'agNumberColumnFilter',
+                headerClass: 'text-[11px] font-bold text-slate-500 uppercase tracking-wider',
                 cellRenderer: (params: any) => {
                     const val = params.value ?? 0;
-                    const color = val <= 10 ? 'text-rose-600 bg-rose-50' : 'text-emerald-600 bg-emerald-50';
+                    const color = val <= 10 ? 'text-rose-600' : 'text-slate-700';
                     return (
-                        <div className={`px-2 py-0.5 rounded-full text-center font-bold ${color}`}>
+                        <div className={`font-bold ${color}`}>
                             {val.toLocaleString()}
                         </div>
                     );
@@ -77,22 +80,27 @@ export function StockDataGrid() {
             },
             {
                 field: 'salePrice',
-                headerName: 'Satış Fiyatı',
-                width: 140,
+                headerName: 'SATIŞ FİYATI',
+                width: 150,
                 filter: 'agNumberColumnFilter',
+                headerClass: 'text-[11px] font-bold text-slate-500 uppercase tracking-wider',
                 valueFormatter: (params) => {
                     if (params.value == null) return '';
                     return `${params.value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
-                }
+                },
+                cellClass: 'font-medium text-slate-700 text-right',
             },
             {
                 field: 'isActive',
-                headerName: 'Durum',
-                width: 110,
+                headerName: 'DURUM',
+                width: 120,
+                headerClass: 'text-[11px] font-bold text-slate-500 uppercase tracking-wider',
                 cellRenderer: (params: any) => (
-                    <Badge variant={params.value ? "default" : "secondary"}>
-                        {params.value ? "Aktif" : "Pasif"}
-                    </Badge>
+                    <div className="flex items-center h-full">
+                        <Badge className={`rounded-sm text-[10px] font-bold uppercase tracking-tight py-0 px-2 shadow-none border-none ${params.value ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                            {params.value ? "AKTIF" : "PASIF"}
+                        </Badge>
+                    </div>
                 ),
             }
         ],
@@ -134,7 +142,6 @@ export function StockDataGrid() {
     // Handle Search Input
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
-        // Grid will refresh via useMemo or explicit API call
     };
 
     useMemo(() => {
@@ -151,44 +158,51 @@ export function StockDataGrid() {
     }, []);
 
     return (
-        <div className="flex flex-col h-full space-y-4">
-            {/* Search & Filters */}
-            <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border shadow-sm">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                        placeholder="Ürün adı, kod veya barkod ile ara..."
-                        className="pl-10 h-10 border-slate-200 focus:ring-primary shadow-none rounded-xl"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                    />
+        <div className="flex flex-col h-full">
+            {/* Search & Utility Bar */}
+            <div className="flex items-center justify-between gap-4 bg-[#f3f3f3] px-6 py-3 border-b border-lightning-border">
+                <div className="flex items-center gap-4 flex-1">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                        <Input
+                            placeholder="Liste içerisinde ara..."
+                            className="pl-9 h-8 border-lightning-border focus:ring-lightning-blue shadow-none rounded-sm bg-white text-sm"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                        />
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium">
+                        50+ Kayıt Gösteriliyor
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-10 rounded-xl border-slate-200">
-                        <Filter className="w-4 h-4 mr-2" />
-                        Gelişmiş Filtre
+                    <Button variant="outline" size="sm" className="h-8 rounded-sm border-lightning-border bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold px-3">
+                        <Filter className="w-3.5 h-3.5 mr-2" />
+                        Filtrele
                     </Button>
                 </div>
             </div>
 
             {/* Grid Container */}
-            <div className="flex-1 bg-white rounded-2xl border shadow-xl shadow-slate-200/50 overflow-hidden ag-theme-quartz">
+            <div className="flex-1 overflow-hidden ag-theme-quartz">
                 <AgGridReact
                     columnDefs={columnDefs}
                     defaultColDef={{
                         sortable: true,
                         resizable: true,
                         filter: true,
-                        floatingFilter: true,
+                        floatingFilter: false,
                         flex: 0,
                     }}
+                    rowHeight={42}
+                    headerHeight={32}
                     rowModelType="serverSide"
                     cacheBlockSize={50}
                     onGridReady={onGridReady}
                     onRowDoubleClicked={onRowDoubleClicked}
                     animateRows={true}
                     rowSelection={{ mode: 'singleRow', checkboxes: false }}
-                    overlayLoadingTemplate='<span class="ag-overlay-loading-center">Ürünler yükleniyor...</span>'
+                    overlayLoadingTemplate='<span class="ag-overlay-loading-center">Yükleniyor...</span>'
                     overlayNoRowsTemplate='<span class="ag-overlay-no-rows-center">Kayıt bulunamadı</span>'
                 />
             </div>
