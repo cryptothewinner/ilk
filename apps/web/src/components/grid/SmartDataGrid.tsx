@@ -158,10 +158,11 @@ export function SmartDataGrid<T = any>({
                         apiEndpoint,
                         request,
                     );
+                    const responseData = (response as any)?.data;
 
                     params.success({
-                        rowData: response.rows,
-                        rowCount: response.lastRow,
+                        rowData: responseData?.rows ?? [],
+                        rowCount: responseData?.lastRow ?? 0,
                     });
                 } catch (error) {
                     console.error('SmartDataGrid: Failed to fetch rows', error);
