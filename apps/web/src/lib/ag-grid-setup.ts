@@ -4,10 +4,13 @@
  * AG Grid Enterprise initialization.
  * Import this once in a client component high up in the tree (e.g., QueryProvider).
  */
-import { LicenseManager, ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
+import { ModuleRegistry } from 'ag-grid-community';
+import { AllCommunityModule } from 'ag-grid-community';
+import { ServerSideRowModelModule } from 'ag-grid-enterprise';
+import { LicenseManager } from 'ag-grid-enterprise';
 
-// Register enterprise modules
-ModuleRegistry.registerModules([AllEnterpriseModule]);
+// Register modules explicitly
+ModuleRegistry.registerModules([AllCommunityModule, ServerSideRowModelModule]);
 
 const licenseKey = process.env.NEXT_PUBLIC_AG_GRID_LICENSE;
 
