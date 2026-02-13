@@ -12,7 +12,12 @@ import type {
 import { ModuleRegistry, AllEnterpriseModule } from 'ag-grid-enterprise';
 import { apiClient } from '@/lib/api-client';
 import { useQuery } from '@tanstack/react-query';
-import { useMaterialDetail, useUpdateMaterial } from '@/hooks/use-materials';
+import {
+    useMaterialDetail,
+    useUpdateMaterial,
+    type MaterialDetail,
+    type MaterialDetailResponse,
+} from '@/hooks/use-materials';
 import { FormEngine } from '@/components/form-engine/form-engine';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +62,16 @@ interface MaterialRow {
     isActive: boolean;
 }
 
+function unwrapMaterialDetail(response: MaterialDetailResponse | undefined): MaterialDetail | null {
+    if (!response) return null;
+
+    if ('data' in response) {
+        return response.data;
+    }
+
+    return response;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
@@ -90,7 +105,7 @@ export default function RawMaterialsPage() {
         error: detailError,
     } = useMaterialDetail(sheetOpen ? selectedId : null);
     const updateMutation = useUpdateMaterial();
-    const detail = detailResponse?.data ?? detailResponse;
+    const detail = unwrapMaterialDetail(detailResponse);
 
     /* ---------- helpers ---------- */
     const rawMaterialCount =

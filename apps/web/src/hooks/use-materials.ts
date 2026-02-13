@@ -21,10 +21,20 @@ interface MaterialListResponse {
     };
 }
 
-interface MaterialDetailResponse {
-    success: boolean;
-    data: Record<string, any>;
+export interface MaterialDetail {
+    id: string;
+    code: string;
+    name: string;
+    isActive: boolean;
+    [key: string]: any;
 }
+
+interface WrappedMaterialDetailResponse {
+    success: boolean;
+    data: MaterialDetail;
+}
+
+export type MaterialDetailResponse = WrappedMaterialDetailResponse | MaterialDetail;
 
 export function useMaterialList(params: ListParams) {
     const sp = new URLSearchParams();
@@ -55,7 +65,7 @@ export function useUpdateMaterial() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Record<string, any> }) =>
-            apiClient.patch<MaterialDetailResponse>(`/materials/${id}`, data),
+            apiClient.patch<WrappedMaterialDetailResponse>(`/materials/${id}`, data),
         onSuccess: (_, v) => {
             qc.invalidateQueries({ queryKey: ['materials', 'detail', v.id] });
             qc.invalidateQueries({ queryKey: ['materials', 'list'] });
