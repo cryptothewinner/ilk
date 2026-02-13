@@ -1,4 +1,8 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+
+if (!process.env.NEXT_PUBLIC_API_URL && typeof window !== 'undefined') {
+    console.warn('[api-client] NEXT_PUBLIC_API_URL is not set. Falling back to http://localhost:4000/api/v1');
+}
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
     body?: unknown;
@@ -13,10 +17,12 @@ class ApiClient {
 
     private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
         const { body, headers, ...rest } = options;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
 
         const response = await fetch(`${this.baseUrl}${endpoint}`, {
             headers: {
                 'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 ...headers,
             },
             body: body ? JSON.stringify(body) : undefined,
@@ -24,6 +30,10 @@ class ApiClient {
         });
 
         if (!response.ok) {
+            if (response.status === 401 && endpoint !== '/auth/login') {
+                this.logout();
+            }
+
             const errorBody = await response.json().catch(() => ({}));
             throw new ApiError(
                 response.status,
