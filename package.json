@@ -7,10 +7,10 @@
         "dev": "turbo dev",
         "build": "turbo build",
         "lint": "turbo lint",
-        "db:generate": "pnpm --filter @sepe/api prisma generate",
-        "db:migrate": "pnpm --filter @sepe/api prisma migrate dev",
-        "db:seed": "pnpm --filter @sepe/api prisma db seed",
-        "db:studio": "pnpm --filter @sepe/api prisma studio",
+        "db:generate": "pnpm --filter @sepenatural/api prisma generate",
+        "db:migrate": "pnpm --filter @sepenatural/api prisma migrate dev",
+        "db:seed": "pnpm --filter @sepenatural/api prisma db seed",
+        "db:studio": "pnpm --filter @sepenatural/api prisma studio",
         "clean": "turbo clean && rm -rf node_modules"
     },
     "devDependencies": {

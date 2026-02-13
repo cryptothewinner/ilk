@@ -73,6 +73,8 @@ Launch all services in development mode:
 pnpm dev
 ```
 
+For a full monorepo production build (`pnpm run build`), ensure **.NET SDK 8+** is installed because the `apps/integration` package runs `dotnet build` during the Turbo pipeline.
+
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
