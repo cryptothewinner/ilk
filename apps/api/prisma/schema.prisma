@@ -351,6 +351,7 @@ model ProductionBatch {
   qcDate            DateTime?   @map("qc_date")
   qcNotes           String?     @map("qc_notes")
   qcApprovedBy      String?     @map("qc_approved_by")
+  productionLocation String?    @map("production_location")
   storageLocation   String?     @map("storage_location")
   notes             String?
   createdAt         DateTime    @default(now()) @map("created_at")
@@ -366,15 +367,16 @@ model ProductionBatch {
 }
 
 model ProductionBatchConsumption {
-  id                String   @id @default(cuid())
-  productionBatchId String   @map("production_batch_id")
-  materialBatchId   String   @map("material_batch_id")
-  recipeItemId      String?  @map("recipe_item_id")
-  consumedQuantity  Decimal  @map("consumed_quantity") @db.Decimal(18, 4)
-  unit              String   @default("Kg")
-  timestamp         DateTime @default(now())
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id                      String   @id @default(cuid())
+  productionBatchId       String   @map("production_batch_id")
+  materialBatchId         String   @map("material_batch_id")
+  recipeItemId            String?  @map("recipe_item_id")
+  consumedQuantity        Decimal  @map("consumed_quantity") @db.Decimal(18, 4)
+  unit                    String   @default("Kg")
+  timestamp               DateTime @default(now())
+  materialStorageLocation String?  @map("material_storage_location")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
 
   productionBatch ProductionBatch @relation(fields: [productionBatchId], references: [id], onDelete: Cascade)
   materialBatch   MaterialBatch   @relation(fields: [materialBatchId], references: [id])

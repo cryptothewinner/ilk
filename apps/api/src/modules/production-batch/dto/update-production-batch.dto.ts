@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsNumber, Min, MaxLength, IsArray, ValidateNested } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, MaxLength, Min, ValidateNested } from 'class-validator';
 import { CreateProductionBatchConsumptionInput } from './create-production-batch.dto';
 
 export class UpdateProductionBatchDto {
@@ -27,7 +27,7 @@ export class UpdateProductionBatchDto {
     @IsOptional()
     @IsString()
     @MaxLength(200)
-    storageLocation?: string;
+    productionLocation?: string;
 
     @IsOptional()
     @IsString()

@@ -44,6 +44,7 @@ export class ProductionBatchService {
             consumedQuantity: consumption.consumedQuantity,
             unit: consumption.unit ?? 'Kg',
             timestamp: consumption.timestamp ? new Date(consumption.timestamp) : new Date(),
+            materialStorageLocation: consumption.materialStorageLocation,
             materialBatch: { connect: { id: consumption.materialBatchId } },
             ...(consumption.recipeItemId ? { recipeItem: { connect: { id: consumption.recipeItemId } } } : {}),
         }));
@@ -58,6 +59,7 @@ export class ProductionBatchService {
         if (search) {
             where.OR = [
                 { batchNumber: { contains: search, mode: 'insensitive' } },
+                { productionLocation: { contains: search, mode: 'insensitive' } },
                 { storageLocation: { contains: search, mode: 'insensitive' } },
                 { notes: { contains: search, mode: 'insensitive' } },
             ];
@@ -93,13 +95,34 @@ export class ProductionBatchService {
 
         const [data, total] = await Promise.all([
             this.prisma.productionBatch.findMany({
-                where, orderBy: orderBy as any, skip, take: pageSize,
-                include: { productionOrder: { select: { id: true, orderNumber: true } } },
+                where,
+                orderBy: orderBy as any,
+                skip,
+                take: pageSize,
+                include: {
+                    productionOrder: { select: { id: true, orderNumber: true } },
+                    consumptions: {
+                        include: {
+                            materialBatch: {
+                                include: { material: { select: { code: true, name: true } } },
+                            },
+                        },
+                    },
+                },
             }),
             this.prisma.productionBatch.count({ where }),
         ]);
 
-        return { success: true, data, meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) } };
+        const normalizedData = data.map((batch) => ({
+            ...batch,
+            productionLocation: batch.productionLocation ?? batch.storageLocation,
+            consumptions: batch.consumptions.map((consumption) => ({
+                ...consumption,
+                materialStorageLocation: consumption.materialStorageLocation ?? consumption.materialBatch.storageLocation,
+            })),
+        }));
+
+        return { success: true, data: normalizedData, meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) } };
     }
 
     async findOne(id: string) {
@@ -117,7 +140,16 @@ export class ProductionBatchService {
             },
         });
         if (!batch) throw new NotFoundException(`Parti bulunamadı: ${id}`);
-        return batch;
+
+        return {
+            ...batch,
+            productionLocation: batch.productionLocation ?? batch.storageLocation,
+            consumptions: batch.consumptions.map((consumption) => ({
+                ...consumption,
+                materialStorageLocation:
+                    consumption.materialStorageLocation ?? consumption.materialBatch.storageLocation,
+            })),
+        };
     }
 
     async create(dto: any) {
