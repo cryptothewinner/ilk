@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BatchStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { BatchStatus } from '@prisma/client';
+import { CreateProductionBatchConsumptionInput } from './dto/create-production-batch.dto';
 
 interface FindAllParams {
     page: number;
@@ -32,6 +33,20 @@ export class ProductionBatchService {
         }
 
         return `${prefix}${String(seq).padStart(3, '0')}`;
+    }
+
+    private buildConsumptionCreateInputs(consumptions?: CreateProductionBatchConsumptionInput[]): Prisma.ProductionBatchConsumptionCreateWithoutProductionBatchInput[] {
+        if (!consumptions?.length) {
+            return [];
+        }
+
+        return consumptions.map((consumption) => ({
+            consumedQuantity: consumption.consumedQuantity,
+            unit: consumption.unit ?? 'Kg',
+            timestamp: consumption.timestamp ? new Date(consumption.timestamp) : new Date(),
+            materialBatch: { connect: { id: consumption.materialBatchId } },
+            ...(consumption.recipeItemId ? { recipeItem: { connect: { id: consumption.recipeItemId } } } : {}),
+        }));
     }
 
     async findAll(params: FindAllParams) {
@@ -90,7 +105,16 @@ export class ProductionBatchService {
     async findOne(id: string) {
         const batch = await this.prisma.productionBatch.findUnique({
             where: { id },
-            include: { productionOrder: { include: { product: true, recipe: true } } },
+            include: {
+                productionOrder: { include: { product: true, recipe: true } },
+                consumptions: {
+                    include: {
+                        recipeItem: { include: { material: true } },
+                        materialBatch: { include: { material: true } },
+                    },
+                    orderBy: { timestamp: 'asc' },
+                },
+            },
         });
         if (!batch) throw new NotFoundException(`Parti bulunamadı: ${id}`);
         return batch;
@@ -98,24 +122,54 @@ export class ProductionBatchService {
 
     async create(dto: any) {
         const batchNumber = await this.generateBatchNumber();
-        const data: any = { ...dto, batchNumber };
+        const { consumptions, ...rest } = dto;
+        const data: Prisma.ProductionBatchCreateInput = { ...rest, batchNumber };
+
         if (dto.manufacturingDate) data.manufacturingDate = new Date(dto.manufacturingDate);
         if (dto.expiryDate) data.expiryDate = new Date(dto.expiryDate);
 
+        const consumptionInputs = this.buildConsumptionCreateInputs(consumptions);
+        if (consumptionInputs.length) {
+            data.consumptions = { create: consumptionInputs };
+        }
+
         return this.prisma.productionBatch.create({
             data,
-            include: { productionOrder: { select: { id: true, orderNumber: true } } },
+            include: {
+                productionOrder: { select: { id: true, orderNumber: true } },
+                consumptions: true,
+            },
         });
     }
 
     async update(id: string, dto: any) {
         await this.findOne(id);
-        const data: any = { ...dto };
+
+        const { consumptions, ...rest } = dto;
+        const data: Prisma.ProductionBatchUpdateInput = { ...rest };
+
         if (dto.manufacturingDate) data.manufacturingDate = new Date(dto.manufacturingDate);
         if (dto.expiryDate) data.expiryDate = new Date(dto.expiryDate);
         if (dto.status) data.status = dto.status as BatchStatus;
 
-        return this.prisma.productionBatch.update({ where: { id }, data });
+        return this.prisma.$transaction(async (tx) => {
+            if (consumptions) {
+                await tx.productionBatchConsumption.deleteMany({ where: { productionBatchId: id } });
+                const consumptionInputs = this.buildConsumptionCreateInputs(consumptions);
+                if (consumptionInputs.length) {
+                    data.consumptions = { create: consumptionInputs };
+                }
+            }
+
+            return tx.productionBatch.update({
+                where: { id },
+                data,
+                include: {
+                    productionOrder: { select: { id: true, orderNumber: true } },
+                    consumptions: true,
+                },
+            });
+        });
     }
 
     async qcPass(id: string) {

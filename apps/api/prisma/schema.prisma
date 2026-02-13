@@ -230,6 +230,7 @@ model MaterialBatch {
   updatedAt         DateTime            @updatedAt @map("updated_at")
 
   material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  consumptions ProductionBatchConsumption[]
 
   @@index([batchNumber])
   @@index([materialId])
@@ -304,6 +305,7 @@ model RecipeItem {
 
   recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
   material Material @relation(fields: [materialId], references: [id])
+  consumptions ProductionBatchConsumption[]
 
   @@unique([recipeId, materialId])
   @@map("recipe_items")
@@ -355,9 +357,32 @@ model ProductionBatch {
   updatedAt         DateTime    @updatedAt @map("updated_at")
 
   productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id])
+  consumptions    ProductionBatchConsumption[]
 
   @@index([status])
   @@index([manufacturingDate])
   @@index([createdAt])
   @@map("production_batches")
+}
+
+model ProductionBatchConsumption {
+  id                String   @id @default(cuid())
+  productionBatchId String   @map("production_batch_id")
+  materialBatchId   String   @map("material_batch_id")
+  recipeItemId      String?  @map("recipe_item_id")
+  consumedQuantity  Decimal  @map("consumed_quantity") @db.Decimal(18, 4)
+  unit              String   @default("Kg")
+  timestamp         DateTime @default(now())
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  productionBatch ProductionBatch @relation(fields: [productionBatchId], references: [id], onDelete: Cascade)
+  materialBatch   MaterialBatch   @relation(fields: [materialBatchId], references: [id])
+  recipeItem      RecipeItem?     @relation(fields: [recipeItemId], references: [id])
+
+  @@index([productionBatchId])
+  @@index([materialBatchId])
+  @@index([recipeItemId])
+  @@index([timestamp])
+  @@map("production_batch_consumptions")
 }

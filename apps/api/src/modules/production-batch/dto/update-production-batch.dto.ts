@@ -1,4 +1,6 @@
-import { IsString, IsOptional, IsNumber, Min, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsNumber, Min, MaxLength, IsArray, ValidateNested } from 'class-validator';
+import { CreateProductionBatchConsumptionInput } from './create-production-batch.dto';
 
 export class UpdateProductionBatchDto {
     @IsOptional()
@@ -36,4 +38,10 @@ export class UpdateProductionBatchDto {
     @IsString()
     @MaxLength(2000)
     notes?: string;
+
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateProductionBatchConsumptionInput)
+    consumptions?: CreateProductionBatchConsumptionInput[];
 }
