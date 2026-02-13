@@ -7,7 +7,7 @@ import '@/lib/ag-grid-setup';
 import { QueryProvider } from '@/providers/query-provider';
 import { AuthProvider } from '@/providers/auth-provider';
 
-import { LightningShell } from '@/components/layout/lightning-shell';
+import { ShellGate } from '@/components/layout/shell-gate';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,9 +26,7 @@ export default function RootLayout({
             <body className={inter.className}>
                 <QueryProvider>
                     <AuthProvider>
-                        <LightningShell>
-                            {children}
-                        </LightningShell>
+                        <ShellGate>{children}</ShellGate>
                     </AuthProvider>
                 </QueryProvider>
             </body>
