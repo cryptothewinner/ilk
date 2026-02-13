@@ -128,3 +128,201 @@ model EventOutbox {
   @@index([status])
   @@map("event_outbox")
 }
+
+// ─── Üretim Yönetim Sistemi ────────────────────────────────────────
+
+enum ProductionOrderStatus {
+  DRAFT
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BatchStatus {
+  PENDING
+  IN_PRODUCTION
+  QC_PENDING
+  QC_PASSED
+  QC_FAILED
+  RELEASED
+  REJECTED
+}
+
+enum MaterialType {
+  RAW_MATERIAL
+  PACKAGING
+  SEMI_FINISHED
+  FINISHED_PRODUCT
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  code          String   @unique @map("supplier_code")
+  name          String
+  contactPerson String?  @map("contact_person")
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  country       String?  @default("Türkiye")
+  taxNumber     String?  @map("tax_number")
+  isActive      Boolean  @default(true) @map("is_active")
+  leadTimeDays  Int?     @default(7) @map("lead_time_days")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  materials Material[]
+
+  @@map("suppliers")
+}
+
+model Material {
+  id               String       @id @default(cuid())
+  code             String       @unique @map("material_code")
+  name             String
+  type             MaterialType @default(RAW_MATERIAL)
+  unitOfMeasure    String       @default("Kg") @map("unit_of_measure")
+  unitPrice        Decimal      @default(0) @map("unit_price") @db.Decimal(18, 4)
+  currency         String       @default("TRY")
+  currentStock     Decimal      @default(0) @map("current_stock") @db.Decimal(18, 4)
+  minStockLevel    Decimal      @default(0) @map("min_stock_level") @db.Decimal(18, 4)
+  moq              Decimal?     @db.Decimal(18, 4)
+  supplierId       String?      @map("supplier_id")
+  category         String?
+  casNumber        String?      @map("cas_number")
+  shelfLife        Int?         @map("shelf_life")
+  storageCondition String?      @map("storage_condition")
+  isActive         Boolean      @default(true) @map("is_active")
+  notes            String?
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  supplier    Supplier?    @relation(fields: [supplierId], references: [id])
+  recipeItems RecipeItem[]
+
+  @@map("materials")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  code          String   @unique @map("product_code")
+  name          String
+  description   String?
+  category      String?
+  unitOfMeasure String   @default("Adet") @map("unit_of_measure")
+  salePrice     Decimal  @default(0) @map("sale_price") @db.Decimal(18, 4)
+  costPrice     Decimal  @default(0) @map("cost_price") @db.Decimal(18, 4)
+  currency      String   @default("TRY")
+  currentStock  Decimal  @default(0) @map("current_stock") @db.Decimal(18, 4)
+  batchSize     Decimal  @default(1) @map("batch_size") @db.Decimal(18, 4)
+  profitMargin  Decimal? @map("profit_margin") @db.Decimal(5, 2)
+  barcode       String?
+  isActive      Boolean  @default(true) @map("is_active")
+  imageUrl      String?  @map("image_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  recipes          Recipe[]
+  productionOrders ProductionOrder[]
+
+  @@map("products")
+}
+
+model Recipe {
+  id           String    @id @default(cuid())
+  code         String    @unique @map("recipe_code")
+  name         String
+  productId    String    @map("product_id")
+  version      Int       @default(1)
+  batchSize    Decimal   @default(1) @map("batch_size") @db.Decimal(18, 4)
+  batchUnit    String    @default("Kg") @map("batch_unit")
+  totalCost    Decimal   @default(0) @map("total_cost") @db.Decimal(18, 4)
+  currency     String    @default("TRY")
+  instructions String?
+  isActive     Boolean   @default(true) @map("is_active")
+  approvedBy   String?   @map("approved_by")
+  approvedAt   DateTime? @map("approved_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  product          Product           @relation(fields: [productId], references: [id])
+  items            RecipeItem[]
+  productionOrders ProductionOrder[]
+
+  @@map("recipes")
+}
+
+model RecipeItem {
+  id             String  @id @default(cuid())
+  recipeId       String  @map("recipe_id")
+  materialId     String  @map("material_id")
+  quantity       Decimal @map("quantity") @db.Decimal(18, 4)
+  unit           String  @default("Kg")
+  wastagePercent Decimal @default(0) @map("wastage_percent") @db.Decimal(5, 2)
+  unitCost       Decimal @default(0) @map("unit_cost") @db.Decimal(18, 4)
+  totalCost      Decimal @default(0) @map("total_cost") @db.Decimal(18, 4)
+  notes          String?
+  order          Int     @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@unique([recipeId, materialId])
+  @@map("recipe_items")
+}
+
+model ProductionOrder {
+  id              String                @id @default(cuid())
+  orderNumber     String                @unique @map("order_number")
+  productId       String                @map("product_id")
+  recipeId        String                @map("recipe_id")
+  plannedQuantity Decimal               @map("planned_quantity") @db.Decimal(18, 4)
+  actualQuantity  Decimal?              @map("actual_quantity") @db.Decimal(18, 4)
+  unit            String                @default("Adet")
+  status          ProductionOrderStatus @default(DRAFT)
+  priority        Int                   @default(0)
+  plannedStart    DateTime?             @map("planned_start")
+  plannedEnd      DateTime?             @map("planned_end")
+  actualStart     DateTime?             @map("actual_start")
+  actualEnd       DateTime?             @map("actual_end")
+  assignedTo      String?               @map("assigned_to")
+  notes           String?
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  product Product           @relation(fields: [productId], references: [id])
+  recipe  Recipe             @relation(fields: [recipeId], references: [id])
+  batches ProductionBatch[]
+
+  @@index([status])
+  @@index([plannedStart])
+  @@map("production_orders")
+}
+
+model ProductionBatch {
+  id                String      @id @default(cuid())
+  batchNumber       String      @unique @map("batch_number")
+  productionOrderId String      @map("production_order_id")
+  quantity          Decimal     @map("quantity") @db.Decimal(18, 4)
+  unit              String      @default("Adet")
+  status            BatchStatus @default(PENDING)
+  manufacturingDate DateTime?   @map("manufacturing_date")
+  expiryDate        DateTime?   @map("expiry_date")
+  qcDate            DateTime?   @map("qc_date")
+  qcNotes           String?     @map("qc_notes")
+  qcApprovedBy      String?     @map("qc_approved_by")
+  storageLocation   String?     @map("storage_location")
+  notes             String?
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id])
+
+  @@index([status])
+  @@index([manufacturingDate])
+  @@map("production_batches")
+}

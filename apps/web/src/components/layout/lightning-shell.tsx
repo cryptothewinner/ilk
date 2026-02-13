@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     Search,
     Bell,
@@ -13,26 +13,110 @@ import {
     Users,
     BarChart3,
     ChevronDown,
-    Menu
+    Menu,
+    Factory,
+    BookOpen,
+    FlaskConical,
+    Layers,
+    ShoppingBag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-interface NavItem {
+interface NavChild {
     label: string;
     href: string;
     icon: React.ReactNode;
 }
 
+interface NavItem {
+    label: string;
+    href?: string;
+    icon: React.ReactNode;
+    children?: NavChild[];
+}
+
 const navItems: NavItem[] = [
-    { label: 'Başlangıç', href: '/', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { label: 'Envanter', href: '/inventory', icon: <Package className="w-4 h-4" /> },
-    { label: 'Satışlar', href: '/sales', icon: <BarChart3 className="w-4 h-4" /> },
-    { label: 'Müşteriler', href: '/customers', icon: <Users className="w-4 h-4" /> },
+    {
+        label: 'Başlangıç',
+        href: '/',
+        icon: <LayoutDashboard className="w-4 h-4" />,
+    },
+    {
+        label: 'Üretim',
+        icon: <Factory className="w-4 h-4" />,
+        children: [
+            { label: 'Üretim Planlama', href: '/production/planning', icon: <Factory className="w-4 h-4" /> },
+            { label: 'Reçeteler', href: '/production/recipes', icon: <BookOpen className="w-4 h-4" /> },
+            { label: 'Partiler', href: '/production/batches', icon: <FlaskConical className="w-4 h-4" /> },
+        ],
+    },
+    {
+        label: 'Malzemeler',
+        icon: <Layers className="w-4 h-4" />,
+        children: [
+            { label: 'Hammaddeler', href: '/materials/raw', icon: <Layers className="w-4 h-4" /> },
+            { label: 'Ürün Listesi', href: '/materials/products', icon: <ShoppingBag className="w-4 h-4" /> },
+        ],
+    },
+    {
+        label: 'Envanter',
+        href: '/inventory',
+        icon: <Package className="w-4 h-4" />,
+    },
+    {
+        label: 'Satışlar',
+        href: '/sales',
+        icon: <BarChart3 className="w-4 h-4" />,
+    },
+    {
+        label: 'Müşteriler',
+        href: '/customers',
+        icon: <Users className="w-4 h-4" />,
+    },
 ];
 
 export function LightningShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const navRef = useRef<HTMLElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (navRef.current && !navRef.current.contains(event.target as Node)) {
+                setOpenDropdown(null);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Close dropdown on route change
+    useEffect(() => {
+        setOpenDropdown(null);
+    }, [pathname]);
+
+    const isItemActive = useCallback((item: NavItem): boolean => {
+        if (item.href) {
+            if (item.href === '/') return pathname === '/';
+            return pathname.startsWith(item.href);
+        }
+        if (item.children) {
+            return item.children.some((child) => pathname.startsWith(child.href));
+        }
+        return false;
+    }, [pathname]);
+
+    const handleTabClick = (item: NavItem) => {
+        if (item.children) {
+            setOpenDropdown(openDropdown === item.label ? null : item.label);
+        } else if (item.href) {
+            setOpenDropdown(null);
+            router.push(item.href);
+        }
+    };
 
     return (
         <div className="flex flex-col min-h-screen bg-lightning-gray">
@@ -76,26 +160,90 @@ export function LightningShell({ children }: { children: React.ReactNode }) {
             </header>
 
             {/* Navigation Tabs Bar */}
-            <nav className="bg-[#f3f3f3] border-b border-lightning-border px-4 flex items-center gap-1 overflow-x-auto">
-                <Button variant="ghost" size="icon" className="md:hidden text-slate-600">
-                    <Menu className="w-5 h-5" />
-                </Button>
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 ${isActive
-                                    ? 'text-lightning-blue border-lightning-blue bg-white shadow-[0_-2px_0_inset_#0176D3]'
-                                    : 'text-slate-600 border-transparent hover:bg-white/50'
+            <nav ref={navRef} className="bg-[#f3f3f3] border-b border-lightning-border px-4 relative">
+                <div className="flex items-center gap-1 overflow-x-auto">
+                    <Button variant="ghost" size="icon" className="md:hidden text-slate-600">
+                        <Menu className="w-5 h-5" />
+                    </Button>
+                    {navItems.map((item) => {
+                        const isActive = isItemActive(item);
+                        const hasChildren = !!item.children;
+                        const isOpen = openDropdown === item.label;
+
+                        if (hasChildren) {
+                            return (
+                                <div key={item.label} className="relative">
+                                    <button
+                                        onClick={() => handleTabClick(item)}
+                                        className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 cursor-pointer ${
+                                            isActive
+                                                ? 'text-lightning-blue border-lightning-blue bg-white shadow-[0_-2px_0_inset_#0176D3]'
+                                                : 'text-slate-600 border-transparent hover:bg-white/50'
+                                        }`}
+                                    >
+                                        <span className={isActive ? 'text-lightning-blue' : 'text-slate-400'}>
+                                            {item.icon}
+                                        </span>
+                                        {item.label}
+                                        <ChevronDown
+                                            className={`w-3.5 h-3.5 transition-transform ${
+                                                isOpen ? 'rotate-180' : ''
+                                            } ${isActive ? 'text-lightning-blue' : 'text-slate-400'}`}
+                                        />
+                                    </button>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href!}
+                                className={`flex items-center gap-2 px-4 py-3 text-[13px] font-semibold border-b-2 transition-all shrink-0 ${
+                                    isActive
+                                        ? 'text-lightning-blue border-lightning-blue bg-white shadow-[0_-2px_0_inset_#0176D3]'
+                                        : 'text-slate-600 border-transparent hover:bg-white/50'
                                 }`}
+                            >
+                                <span className={isActive ? 'text-lightning-blue' : 'text-slate-400'}>
+                                    {item.icon}
+                                </span>
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Dropdown Panels */}
+                {navItems.map((item) => {
+                    if (!item.children || openDropdown !== item.label) return null;
+                    return (
+                        <div
+                            key={item.label}
+                            className="absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-lg z-40"
                         >
-                            <span className={isActive ? 'text-lightning-blue' : 'text-slate-400'}>
-                                {item.icon}
-                            </span>
-                            {item.label}
-                        </Link>
+                            <div className="flex items-center gap-1 px-4 py-2">
+                                {item.children.map((child) => {
+                                    const isChildActive = pathname.startsWith(child.href);
+                                    return (
+                                        <Link
+                                            key={child.href}
+                                            href={child.href}
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-md transition-all ${
+                                                isChildActive
+                                                    ? 'text-lightning-blue bg-blue-50'
+                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                            }`}
+                                        >
+                                            <span className={isChildActive ? 'text-lightning-blue' : 'text-slate-400'}>
+                                                {child.icon}
+                                            </span>
+                                            {child.label}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     );
                 })}
             </nav>

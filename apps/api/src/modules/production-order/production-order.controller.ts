@@ -1,0 +1,58 @@
+import { Controller, Get, Post, Patch, Param, Body, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { ProductionOrderService } from './production-order.service';
+import { CreateProductionOrderDto } from './dto/create-production-order.dto';
+import { UpdateProductionOrderDto } from './dto/update-production-order.dto';
+
+@Controller('production-orders')
+export class ProductionOrderController {
+    constructor(private readonly productionOrderService: ProductionOrderService) { }
+
+    @Get()
+    async findAll(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+        @Query('pageSize', new DefaultValuePipe(100), ParseIntPipe) pageSize: number,
+        @Query('sortField') sortField?: string,
+        @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+        @Query('search') search?: string,
+        @Query('filters') filters?: string,
+    ) {
+        return this.productionOrderService.findAll({
+            page, pageSize: Math.min(pageSize, 500), sortField, sortOrder, search,
+            filters: filters ? JSON.parse(filters) : undefined,
+        });
+    }
+
+    @Get('summary')
+    async getSummary() {
+        return this.productionOrderService.getSummary();
+    }
+
+    @Get(':id')
+    async findOne(@Param('id') id: string) {
+        return this.productionOrderService.findOne(id);
+    }
+
+    @Post()
+    async create(@Body() dto: CreateProductionOrderDto) {
+        const order = await this.productionOrderService.create(dto);
+        return { success: true, data: order };
+    }
+
+    @Patch(':id')
+    async update(@Param('id') id: string, @Body() dto: UpdateProductionOrderDto) {
+        const order = await this.productionOrderService.update(id, dto);
+        return { success: true, data: order };
+    }
+
+    @Post(':id/start')
+    async start(@Param('id') id: string) {
+        const order = await this.productionOrderService.start(id);
+        return { success: true, data: order };
+    }
+
+    @Post(':id/complete')
+    async complete(@Param('id') id: string) {
+        const order = await this.productionOrderService.complete(id);
+        return { success: true, data: order };
+    }
+}
