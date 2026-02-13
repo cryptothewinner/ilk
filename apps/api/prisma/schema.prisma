@@ -230,6 +230,7 @@ model MaterialBatch {
   updatedAt         DateTime            @updatedAt @map("updated_at")
 
   material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  consumptions ProductionBatchMaterialConsumption[]
 
   @@index([batchNumber])
   @@index([materialId])
@@ -349,15 +350,35 @@ model ProductionBatch {
   qcDate            DateTime?   @map("qc_date")
   qcNotes           String?     @map("qc_notes")
   qcApprovedBy      String?     @map("qc_approved_by")
+  productionLocation String?    @map("production_location")
   storageLocation   String?     @map("storage_location")
   notes             String?
   createdAt         DateTime    @default(now()) @map("created_at")
   updatedAt         DateTime    @updatedAt @map("updated_at")
 
   productionOrder ProductionOrder @relation(fields: [productionOrderId], references: [id])
+  consumptions    ProductionBatchMaterialConsumption[]
 
   @@index([status])
   @@index([manufacturingDate])
   @@index([createdAt])
   @@map("production_batches")
+}
+
+model ProductionBatchMaterialConsumption {
+  id                      String   @id @default(cuid())
+  productionBatchId       String   @map("production_batch_id")
+  materialBatchId         String   @map("material_batch_id")
+  quantity                Decimal  @db.Decimal(18, 4)
+  unit                    String   @default("Kg")
+  materialStorageLocation String?  @map("material_storage_location")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  productionBatch ProductionBatch @relation(fields: [productionBatchId], references: [id], onDelete: Cascade)
+  materialBatch   MaterialBatch   @relation(fields: [materialBatchId], references: [id])
+
+  @@index([productionBatchId])
+  @@index([materialBatchId])
+  @@map("production_batch_material_consumptions")
 }

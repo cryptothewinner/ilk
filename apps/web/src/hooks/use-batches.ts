@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
 interface ListParams {
@@ -10,9 +10,43 @@ interface ListParams {
     filters?: Record<string, any>;
 }
 
+export interface BatchConsumption {
+    id: string;
+    quantity: number;
+    unit: string;
+    materialStorageLocation?: string;
+    materialBatch: {
+        id: string;
+        batchNumber: string;
+        storageLocation?: string;
+        material: {
+            code: string;
+            name: string;
+        };
+    };
+}
+
+export interface ProductionBatch {
+    id: string;
+    batchNumber: string;
+    status: string;
+    quantity: number;
+    unit: string;
+    productionLocation?: string;
+    manufacturingDate?: string;
+    expiryDate?: string;
+    productionOrder?: {
+        id: string;
+        orderNumber: string;
+        product?: { name: string };
+        recipe?: { code: string; name: string };
+    };
+    consumptions?: BatchConsumption[];
+}
+
 interface ListResponse {
     success: boolean;
-    data: any[];
+    data: ProductionBatch[];
     meta: {
         total: number;
         page: number;
@@ -23,7 +57,7 @@ interface ListResponse {
 
 interface DetailResponse {
     success: boolean;
-    data: Record<string, any>;
+    data: ProductionBatch;
 }
 
 export function useBatchList(params: ListParams) {

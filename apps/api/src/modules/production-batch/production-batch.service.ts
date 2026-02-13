@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { BatchStatus } from '@prisma/client';
+import { BatchStatus, Prisma } from '@prisma/client';
 
 interface FindAllParams {
     page: number;
@@ -43,6 +43,7 @@ export class ProductionBatchService {
         if (search) {
             where.OR = [
                 { batchNumber: { contains: search, mode: 'insensitive' } },
+                { productionLocation: { contains: search, mode: 'insensitive' } },
                 { storageLocation: { contains: search, mode: 'insensitive' } },
                 { notes: { contains: search, mode: 'insensitive' } },
             ];
@@ -78,44 +79,128 @@ export class ProductionBatchService {
 
         const [data, total] = await Promise.all([
             this.prisma.productionBatch.findMany({
-                where, orderBy: orderBy as any, skip, take: pageSize,
-                include: { productionOrder: { select: { id: true, orderNumber: true } } },
+                where,
+                orderBy: orderBy as any,
+                skip,
+                take: pageSize,
+                include: {
+                    productionOrder: { select: { id: true, orderNumber: true } },
+                    consumptions: {
+                        include: {
+                            materialBatch: {
+                                include: { material: { select: { code: true, name: true } } },
+                            },
+                        },
+                    },
+                },
             }),
             this.prisma.productionBatch.count({ where }),
         ]);
 
-        return { success: true, data, meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) } };
+        const normalizedData = data.map((batch) => ({
+            ...batch,
+            productionLocation: batch.productionLocation ?? batch.storageLocation,
+            consumptions: batch.consumptions.map((consumption) => ({
+                ...consumption,
+                materialStorageLocation: consumption.materialStorageLocation ?? consumption.materialBatch.storageLocation,
+            })),
+        }));
+
+        return { success: true, data: normalizedData, meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) } };
     }
 
     async findOne(id: string) {
         const batch = await this.prisma.productionBatch.findUnique({
             where: { id },
-            include: { productionOrder: { include: { product: true, recipe: true } } },
+            include: {
+                productionOrder: { include: { product: true, recipe: true } },
+                consumptions: {
+                    include: {
+                        materialBatch: {
+                            include: { material: true },
+                        },
+                    },
+                },
+            },
         });
         if (!batch) throw new NotFoundException(`Parti bulunamadı: ${id}`);
-        return batch;
+
+        return {
+            ...batch,
+            productionLocation: batch.productionLocation ?? batch.storageLocation,
+            consumptions: batch.consumptions.map((consumption) => ({
+                ...consumption,
+                materialStorageLocation:
+                    consumption.materialStorageLocation ?? consumption.materialBatch.storageLocation,
+            })),
+        };
     }
 
     async create(dto: any) {
         const batchNumber = await this.generateBatchNumber();
-        const data: any = { ...dto, batchNumber };
+        const { consumptions, ...batchData } = dto;
+        const data: Prisma.ProductionBatchCreateInput = {
+            ...batchData,
+            batchNumber,
+            productionLocation: dto.productionLocation,
+            consumptions: consumptions?.length
+                ? {
+                    create: consumptions.map((item: any) => ({
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        materialStorageLocation: item.materialStorageLocation,
+                        materialBatch: { connect: { id: item.materialBatchId } },
+                    })),
+                }
+                : undefined,
+        };
+
         if (dto.manufacturingDate) data.manufacturingDate = new Date(dto.manufacturingDate);
         if (dto.expiryDate) data.expiryDate = new Date(dto.expiryDate);
 
         return this.prisma.productionBatch.create({
             data,
-            include: { productionOrder: { select: { id: true, orderNumber: true } } },
+            include: {
+                productionOrder: { select: { id: true, orderNumber: true } },
+                consumptions: true,
+            },
         });
     }
 
     async update(id: string, dto: any) {
         await this.findOne(id);
-        const data: any = { ...dto };
+        const { consumptions, ...batchData } = dto;
+        const data: Prisma.ProductionBatchUpdateInput = {
+            ...batchData,
+            productionLocation: dto.productionLocation,
+        };
         if (dto.manufacturingDate) data.manufacturingDate = new Date(dto.manufacturingDate);
         if (dto.expiryDate) data.expiryDate = new Date(dto.expiryDate);
         if (dto.status) data.status = dto.status as BatchStatus;
 
-        return this.prisma.productionBatch.update({ where: { id }, data });
+        if (consumptions) {
+            data.consumptions = {
+                deleteMany: {},
+                create: consumptions.map((item: any) => ({
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    materialStorageLocation: item.materialStorageLocation,
+                    materialBatch: { connect: { id: item.materialBatchId } },
+                })),
+            };
+        }
+
+        return this.prisma.productionBatch.update({
+            where: { id },
+            data,
+            include: {
+                consumptions: {
+                    include: {
+                        materialBatch: { include: { material: true } },
+                    },
+                },
+            },
+        });
     }
 
     async qcPass(id: string) {
