@@ -18,16 +18,26 @@ export class AuthService {
     ) { }
 
     async validateUser(email: string, password: string) {
+        console.log(`[AuthService] Validating user: ${email}`);
         const user = await this.prisma.user.findUnique({ where: { email } });
-        if (!user || !user.isActive) {
+
+        if (!user) {
+            console.log(`[AuthService] User not found: ${email}`);
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
+        }
+
+        if (!user.isActive) {
+            console.log(`[AuthService] User is inactive: ${email}`);
             throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
         if (!isPasswordValid) {
+            console.log(`[AuthService] Invalid password for: ${email}`);
             throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
+        console.log(`[AuthService] User validated successfully: ${email}`);
         return user;
     }
 

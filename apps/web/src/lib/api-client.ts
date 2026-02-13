@@ -59,10 +59,11 @@ class ApiClient {
 
     async login(email: string, password: string) {
         const response = await this.post<any>('/auth/login', { email, password });
-        if (response.success && response.data?.token) {
-            localStorage.setItem('auth_token', response.data.token);
+        // The backend returns { accessToken: string, user: { ... } }
+        if (response.accessToken) {
+            localStorage.setItem('auth_token', response.accessToken);
         }
-        return response.data;
+        return response;
     }
 
     get<T>(endpoint: string, options?: RequestOptions): Promise<T> {

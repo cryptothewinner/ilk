@@ -1,8 +1,34 @@
 // apps/api/prisma/seed.ts
 
 import { PrismaClient, MaterialType, ProductionOrderStatus, BatchStatus } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
+
+// --- NEW: User Seed ---
+async function seedUsers() {
+    console.log('Seeding default users...');
+    const adminEmail = 'admin@sepenatural.com';
+    const adminPassword = 'Password123!';
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+    await prisma.user.upsert({
+        where: { email: adminEmail },
+        update: {
+            passwordHash,
+            isActive: true,
+            role: 'ADMIN',
+        },
+        create: {
+            email: adminEmail,
+            passwordHash,
+            fullName: 'Sistem Yoneticisi',
+            role: 'ADMIN',
+            isActive: true,
+        },
+    });
+    console.log('Default admin user synchronized: admin@sepenatural.com / Password123!');
+}
 
 // --- Existing constants ---
 const categories = [
@@ -389,6 +415,7 @@ async function seedProductionMetadata() {
 
 async function main() {
     try {
+        await seedUsers();
         await seedStocks();
         await seedMetadata();
         await seedSuppliers();
